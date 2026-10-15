@@ -55,3 +55,24 @@ SELECT
     ) AS variacao_participacao_pp
 FROM por_grupo
 ORDER BY variacao_percentual;
+
+
+-- 2.4 Em quantos estados a ansiedade já passou a depressão, por ano (2023 vai só até maio)
+WITH por_estado AS (
+    SELECT
+        ano,
+        uf_residencia,
+        count(*) FILTER (WHERE grupo_transtorno = 'Ansiedade') AS ansiedade,
+        count(*) FILTER (WHERE grupo_transtorno = 'Depressão') AS depressao
+    FROM vw_auxilio_doenca
+    WHERE ano BETWEEN 2019 AND 2023
+      AND uf_residencia IS NOT NULL
+    GROUP BY ano, uf_residencia
+)
+SELECT
+    ano,
+    count(*) FILTER (WHERE ansiedade > depressao) AS estados_ansiedade_lidera,
+    string_agg(uf_residencia::text, ', ' ORDER BY uf_residencia) FILTER (WHERE ansiedade > depressao) AS estados
+FROM por_estado
+GROUP BY ano
+ORDER BY ano;
